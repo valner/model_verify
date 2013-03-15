@@ -53,13 +53,14 @@ ostream& operator<<(ostream& stream, const IntVariable& right)
  * @param filename - name of output file
  * @param count_flag - flag, indicates if need print state number
  */
-StateMaker::StateMaker(char* filename, bool count_flag): m_count_flag(count_flag) 
-                                      , m_states_number(0)
+StateMaker::StateMaker(char* filename, bool count_flag): m_states_number(0)
+                                      , m_count_flag(count_flag) 
                                       , m_to_file_flag(false)
                                       , m_file(filename)
                                       , m_old()
 {
     if(filename)
+    {
         if(m_file.bad())
         {
             // filename specified, but can't open file for write
@@ -70,7 +71,7 @@ StateMaker::StateMaker(char* filename, bool count_flag): m_count_flag(count_flag
             // successful openned file 
             m_to_file_flag = true;
         }
-    
+    }
 }
 
 /**
@@ -118,9 +119,9 @@ void StateMaker::PrintStates(int f_a, int f_b, int g_a, int g_b)
  */
 void StateMaker::GenerateStates(FuncVars f, FuncVars g, IntVariable h)
 {
-    if(m_old.count(pair<int, int> (f.counter, g.counter))!=0)
+    if(m_old.count(StateDiff(f.counter, g.counter, h))!=0)
         return;
-    m_old.insert(pair<int, int>(f.counter, g.counter));
+    m_old.insert(StateDiff(f.counter, g.counter, h));
     ++m_states_number;
     if(m_to_file_flag)
     {
@@ -222,7 +223,7 @@ void StateMaker::StepInG(FuncVars f, FuncVars g, IntVariable h)
             break;
         // y = 0;
         case 2:
-            g.y = 0;
+            g.y = 10;
             ++g.counter;
             break;
         // h = 1
