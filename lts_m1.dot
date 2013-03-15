@@ -1,0 +1,29 @@
+digraph
+{
+/**
+ * dot graph for function f
+ */
+
+    edge [color =  "red"];
+    0        [label = "0, #, #, #"];
+    1        [label = "1, #, #, #"];
+    0 -> 1   [label = "int x,y;"];
+    2        [label = "2, 6, #, #"];
+    1 -> 2   [label = "x = 6;"];
+    3        [label = "3, 6, 1, #"];
+    2 -> 3   [label = "y = 1;"];
+    4        [label = "4, 6, 1, 6"];
+    3 -> 4   [label = "h = 6;"];
+    5        [label = "5, 6, 1, 6"];
+    4 -> 5   [label = "h = x;"];
+    7        [label = "7, 6, 1 ,6"];
+    5 -> 7   [label = "!(y>2)"];
+    8        [label = "8, 6, 1 ,6"];
+    7 -> 8   [label = "(y<8)"];
+    10       [label = "10, 6 ,1, 6"];
+    8 -> 10  [label = "!(y>5)"];
+    11       [label = "11, 5, 1, 6"];
+    10 -> 11 [label = "x=5;"];
+}
+
+
