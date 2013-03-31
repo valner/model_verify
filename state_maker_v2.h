@@ -64,7 +64,6 @@ public:
             return m_value < right.m_value;
         return false;
     }
-private:
 /**
  * @brief stored value
  */
@@ -165,10 +164,6 @@ private:
  */
   unsigned int m_count_flag;
 /**
- * @brief flag, indicates if output should be to file
- */
-    bool m_to_file_flag;
-/**
  * @brief stream for output file
  */
     std::ofstream m_file;
@@ -179,7 +174,7 @@ private:
 /**
  * @brief flag, indicates if lts file choosen"
  */
-    bool m_lst;
+    bool m_lts;
 /**
  * @brief stream to lts file
  */
@@ -207,6 +202,7 @@ private:
  * @param h - state of global variable
  */
     void StepInG(FuncVars f, FuncVars g, IntVariable h);
+    int CalcHash(unsigned int fcounter, unsigned int gcounter, IntVariable h);
 // Copy isn't allowed
     StateMaker(StateMaker&);
     StateMaker& operator=(StateMaker&);

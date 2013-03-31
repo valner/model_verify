@@ -53,26 +53,16 @@ ostream& operator<<(ostream& stream, const IntVariable& right)
  * @param filename - name of output file
  * @param count_flag - flag, indicates if need print state number
  */
-StateMaker::StateMaker(char* filename, bool count_flag, char* lst_filename): m_states_number(0)
+StateMaker::StateMaker(char* filename, bool count_flag, char* lts_filename): m_states_number(0)
                                       , m_count_flag(count_flag) 
-                                      , m_to_file_flag(false)
                                       , m_file(filename)
                                       , m_old()
-                                      , m_lts(false),
-                                      , m_file(lts_filename)
+                                      , m_lts(false)
+                                      , m_lts_file(lts_filename)
 {
-    if(filename)
+    if(!filename)
     {
-        if(m_file.bad())
-        {
-            // filename specified, but can't open file for write
-            cerr<<"Can't open file, redirecting output to console"<<endl;
-        }
-        else
-        {
-            // successful openned file 
-            m_to_file_flag = true;
-        }
+        m_file.open("states.txt");
     }
     if(lts_filename)
     {
@@ -120,12 +110,29 @@ void StateMaker::PrintStates(int f_a, int f_b, int g_a, int g_b)
 
     // global variable
     IntVariable h;
-
+    if (m_lts)
+    {
+        m_lts_file<<"digraph G{"<<endl;
+    }
     // start generating
     GenerateStates(f, g, h);
     if(m_count_flag) cout<<"Result states number: "<<m_states_number<<endl;
+    if (m_lts)
+    {
+        m_lts_file<<"}"<<endl;
+    }
 }
 
+
+int StateMaker::CalcHash(unsigned int fcounter, unsigned int gcounter, IntVariable h)
+{
+    int tmp;
+    if (!h.m_init_flag)
+        tmp = 19;
+    else
+        tmp = h.m_value;
+    return tmp + fcounter*20 + gcounter*20*20;
+}
 /** 
  * @brief generates and prints all states after state described by f, g and h
  * @param f - state of function f
@@ -137,17 +144,14 @@ void StateMaker::GenerateStates(FuncVars f, FuncVars g, IntVariable h)
     if(m_old.count(StateDiff(f.counter, g.counter, h))!=0)
         return;
     m_old.insert(StateDiff(f.counter, g.counter, h));
+    if(m_lts)
+    {
+        m_lts_file<<"    "<<CalcHash(f.counter, g.counter, h)<<" [label=\""<<f.counter<<" ";
+        m_lts_file<<g.counter<<" "<<h<<" "<<f.x<<" "<<f.y<<" "<<g.x<<" "<<g.y<<"\"];"<<endl;
+    }
     ++m_states_number;
-    if(m_to_file_flag)
-    {
-        // print to file
-        m_file<<f.counter<<", "<<g.counter<<", "<<h<<", "<<f.x<<", "<<f.y<<", "<<g.x<<", "<<g.y<<endl;
-    }
-    else
-    {
-       // print to console
-       cout<<f.counter<<", "<<g.counter<<", "<<h<<", "<<f.x<<", "<<f.y<<", "<<g.x<<", "<<g.y<<endl;
-    }
+    // print to file
+    m_file<<f.counter<<", "<<g.counter<<", "<<h<<", "<<f.x<<", "<<f.y<<", "<<g.x<<", "<<g.y<<endl;
     // activated thread with f
     if(f.counter < 11) StepInF(f,g,h);
     // activated thread with g
@@ -162,49 +166,88 @@ void StateMaker::GenerateStates(FuncVars f, FuncVars g, IntVariable h)
  */
 void StateMaker::StepInF(FuncVars f, FuncVars g, IntVariable h)
 {
-
+    if(m_lts)
+    {
+        m_lts_file<<"    "<<CalcHash(f.counter, g.counter, h)<<" -> ";
+    }
     switch(f.counter)
     {
         //int x,y
         case 0:
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"int x,y;\" color = \"red\"];"<<endl;
+            }
             break;
         // x = 6
         case 1:
             f.x = 6;
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"x=6;\" color = \"red\"];"<<endl;
+            }
             break;
         // y = 1
         case 2:
             f.y = 1;
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"y=1;\" color = \"red\"];"<<endl;
+            }
             break;
         // h = 6
         case 3: 
             h = 6;
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"h=6;\" color = \"red\"];"<<endl;
+            }
             break;
         // h = x
         case 4:
             h = f.x;
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"h=x;\" color = \"red\"];"<<endl;
+            }
             break;
         // if (y>2)
         case 5: 
             f.counter = 7;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"!(y>2);\" color = \"red\"];"<<endl;
+            }
             break;
         // if (y<8)
         case 7:
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"y<8;\" color = \"red\"];"<<endl;
+            }
             break;
         // if (y>5)
         case 8:
             f.counter = 10;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"!(y>5);\" color = \"red\"];"<<endl;
+            }
             break;
         // x = 5
         case 10:
             f.x = 5;
             ++f.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"x=5;\" color = \"red\"];"<<endl;
+            }
             break;
         // end of f
         case 11:
@@ -225,56 +268,104 @@ void StateMaker::StepInF(FuncVars f, FuncVars g, IntVariable h)
  */
 void StateMaker::StepInG(FuncVars f, FuncVars g, IntVariable h)
 {
+    if(m_lts)
+    {
+        m_lts_file<<"    "<<CalcHash(f.counter, g.counter, h)<<" -> ";
+    }
     switch(g.counter)
     {
         // int x,y
         case 0:
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"int x,y;\" color = \"blue\"];"<<endl;
+            }
             break;
         // x = 9
         case 1:
             g.x = 9;
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"x = 9;\" color = \"blue\"];"<<endl;
+            }
             break;
         // y = 0;
         case 2:
             g.y = 10;
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"y = 0;\" color = \"blue\"];"<<endl;
+            }
             break;
         // h = 1
         case 3:
             h = 1;
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"h = 1;\" color = \"blue\"];"<<endl;
+            }
             break;
         // if(x<2)
         case 4:
             g.counter = 6;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"!(x<2);\" color = \"blue\"];"<<endl;
+            }
             break;
         // h = 2
         case 6: 
             h = 2;
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"h = 2;\" color = \"blue\"];"<<endl;
+            }
             break;
         // if(h>7)
         case 7:
             g.counter = 9;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"!(h>7);\" color = \"blue\"];"<<endl;
+            }
             break;
         // y = 4
         case 9: 
             g.y = 4;
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"y = 4;\" color = \"blue\"];"<<endl;
+            }
             break;
         // while (x>7)
         case 10:
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"x>7;\" color = \"blue\"];"<<endl;
+            }
             break;
         // if (h>0)
         case 11:
             ++g.counter;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"h>0;\" color = \"blue\"];"<<endl;
+            }
             break;
         // break
         case 12:
             g.counter = 17;
+            if(m_lts)
+            {
+                m_lts_file<<CalcHash(f.counter, g.counter, h)<<" [label = \"break;\" color = \"blue\"];"<<endl;
+            }
             break;
         // end of g
         case 17:
@@ -285,6 +376,7 @@ void StateMaker::StepInG(FuncVars f, FuncVars g, IntVariable h)
     }
     GenerateStates(f,g,h);
 }
+
 
 int main(int argc, char** argv)
 {
